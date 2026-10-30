@@ -1,0 +1,128 @@
+[
+  {
+    "channel": "#data-quality-alerts",
+    "color": "#e01e5a",
+    "blocks": [
+      {
+        "type": "header",
+        "text": {
+          "type": "plain_text",
+          "text": "ERROR: kualitas marts.fct_realisasi turun"
+        }
+      },
+      {
+        "type": "section",
+        "fields": [
+          {
+            "type": "mrkdwn",
+            "text": "*Skor:*\n45.0/100"
+          },
+          {
+            "type": "mrkdwn",
+            "text": "*Level:*\nERROR"
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": "• `invariant:realisasi <= pagu` — FAIL: 1 baris melanggar\n• `freshness:updated_at` — WARN: 2.6 jam sejak update terakhir"
+        }
+      },
+      {
+        "type": "context",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "#data-quality-alerts · apbd-observability · kontrak: config/contract.yaml"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "channel": "#data-quality-alerts",
+    "color": "#e01e5a",
+    "blocks": [
+      {
+        "type": "header",
+        "text": {
+          "type": "plain_text",
+          "text": "ERROR: kualitas raw.transaksi turun"
+        }
+      },
+      {
+        "type": "section",
+        "fields": [
+          {
+            "type": "mrkdwn",
+            "text": "*Skor:*\n40.0/100"
+          },
+          {
+            "type": "mrkdwn",
+            "text": "*Level:*\nERROR"
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": "• `not_null:kode_skpd` — FAIL: 12 NULL\n• `unique:id_bku` — FAIL: 5 nilai ganda"
+        }
+      },
+      {
+        "type": "context",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "#data-quality-alerts · apbd-observability · kontrak: config/contract.yaml"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "channel": "#data-quality-alerts",
+    "color": "#e01e5a",
+    "blocks": [
+      {
+        "type": "header",
+        "text": {
+          "type": "plain_text",
+          "text": "ERROR: kualitas staging.stg_transaksi turun"
+        }
+      },
+      {
+        "type": "section",
+        "fields": [
+          {
+            "type": "mrkdwn",
+            "text": "*Skor:*\n40.0/100"
+          },
+          {
+            "type": "mrkdwn",
+            "text": "*Level:*\nERROR"
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": "• `freshness:loaded_at` — FAIL: 4.5 jam sejak update terakhir\n• `row_count:rows` — FAIL: 8845 baris"
+        }
+      },
+      {
+        "type": "context",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "#data-quality-alerts · apbd-observability · kontrak: config/contract.yaml"
+          }
+        ]
+      }
+    ]
+  }
+]

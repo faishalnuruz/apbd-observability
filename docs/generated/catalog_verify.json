@@ -1,0 +1,76 @@
+{
+  "service": "bpkd_postgres",
+  "tables": [
+    {
+      "fqn": "bpkd_postgres.bpkd.raw.transaksi",
+      "present": true,
+      "description": true,
+      "owners": [
+        "bidang_data"
+      ],
+      "expected_owner": "bidang_data",
+      "pii_tags": [
+        "PII.Sensitive"
+      ],
+      "expected_pii": [
+        "PII.Sensitive"
+      ]
+    },
+    {
+      "fqn": "bpkd_postgres.bpkd.staging.stg_transaksi",
+      "present": true,
+      "description": true,
+      "owners": [
+        "bidang_data"
+      ],
+      "expected_owner": "bidang_data",
+      "pii_tags": [
+        "PII.Sensitive"
+      ],
+      "expected_pii": [
+        "PII.Sensitive"
+      ]
+    },
+    {
+      "fqn": "bpkd_postgres.bpkd.marts.transaksi_bku",
+      "present": true,
+      "description": true,
+      "owners": [
+        "bidang_perencanaan"
+      ],
+      "expected_owner": "bidang_perencanaan",
+      "pii_tags": [
+        "PII.Sensitive"
+      ],
+      "expected_pii": [
+        "PII.Sensitive"
+      ]
+    },
+    {
+      "fqn": "bpkd_postgres.bpkd.marts.fct_realisasi",
+      "present": true,
+      "description": true,
+      "owners": [
+        "bidang_perencanaan"
+      ],
+      "expected_owner": "bidang_perencanaan",
+      "pii_tags": [],
+      "expected_pii": []
+    },
+    {
+      "fqn": "bpkd_postgres.bpkd.marts.dim_skpd",
+      "present": true,
+      "description": true,
+      "owners": [
+        "bidang_perencanaan"
+      ],
+      "expected_owner": "bidang_perencanaan",
+      "pii_tags": [],
+      "expected_pii": []
+    }
+  ],
+  "lineage_drift": {
+    "missing_from_catalog": [],
+    "stale_in_contract": []
+  }
+}

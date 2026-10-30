@@ -1,0 +1,37 @@
+# RBAC policy enforced by the query gateway. Every query passes through here:
+# unknown role or table => denied (fail closed), and everything — allowed or
+# denied — lands in the audit trail.
+#
+# row_filter: column -> allowed values; null means all rows.
+# mask_columns: rendered as left(col, 2) || '***' so the shape survives but
+# the value does not.
+roles:
+  kepala_bpkd:
+    description: Kepala BPKD — seluruh SKPD, kolom sensitif tampil penuh.
+    tables: [marts.fct_realisasi, marts.transaksi_bku]
+    row_filter: null
+    mask_columns: []
+
+  bidang_kesehatan:
+    description: Bidang Kesehatan — hanya SKPD 1.05, NIP penyamar.
+    tables: [marts.fct_realisasi, marts.transaksi_bku]
+    row_filter: { kode_skpd: ["1.05"] }
+    mask_columns: [nik_pelapor]
+
+  bidang_pendidikan:
+    description: Bidang Pendidikan — hanya SKPD 1.03, NIP penyamar.
+    tables: [marts.fct_realisasi, marts.transaksi_bku]
+    row_filter: { kode_skpd: ["1.03"] }
+    mask_columns: [nik_pelapor]
+
+  auditor:
+    description: Auditor — baca-saja semua SKPD, tanpa NIP.
+    tables: [marts.fct_realisasi, marts.transaksi_bku]
+    row_filter: null
+    mask_columns: [nik_pelapor]
+
+  it_admin:
+    description: IT admin — termasuk schema mentah, kolom sensitif penuh.
+    tables: [marts.fct_realisasi, marts.transaksi_bku, raw.transaksi]
+    row_filter: null
+    mask_columns: []

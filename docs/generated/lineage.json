@@ -1,0 +1,31 @@
+{
+  "dashboard": "Rekap Realisasi APBD",
+  "edges": [
+    {
+      "from": "raw.transaksi",
+      "to": "staging.stg_transaksi",
+      "kind": "table"
+    },
+    {
+      "from": "staging.stg_transaksi",
+      "to": "marts.transaksi_bku",
+      "kind": "table"
+    },
+    {
+      "from": "staging.stg_transaksi",
+      "to": "marts.fct_realisasi",
+      "kind": "table"
+    },
+    {
+      "from": "marts.dim_skpd",
+      "to": "marts.fct_realisasi",
+      "kind": "table"
+    },
+    {
+      "from": "marts.fct_realisasi",
+      "to": "Rekap Realisasi APBD",
+      "kind": "dashboard",
+      "dashboard_service": "metabase_bpkd"
+    }
+  ]
+}

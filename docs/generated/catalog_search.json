@@ -1,0 +1,20 @@
+{
+  "query": "realisasi",
+  "hits": [
+    {
+      "fqn": "bpkd_postgres.bpkd.marts.fct_realisasi.realisasi",
+      "type": "tableColumn",
+      "description": ""
+    },
+    {
+      "fqn": "bpkd_postgres.bpkd.marts.fct_realisasi",
+      "type": "table",
+      "description": "Realisasi vs pagu per SKPD — fact yang dipakai dashboard rekap."
+    },
+    {
+      "fqn": "metabase_bpkd.Rekap Realisasi APBD",
+      "type": "dashboard",
+      "description": "Dashboard rekap realisasi per SKPD (titik hilir seluruh lineage)."
+    }
+  ]
+}

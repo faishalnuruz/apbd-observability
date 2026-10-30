@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "apbd-observability"
+version = "0.1.0"
+description = "Project 3 of the BPKD PRD, built for real: real OpenMetadata catalog + data-contract quality scoring + RBAC gateway with audit trail + Prometheus/Grafana, over a deliberately-defect-seeded APBD data plane."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+  "psycopg[binary]>=3.1,<4",
+  "pyyaml>=6.0,<7",
+  "requests>=2.32,<3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8,<9",
+  "ruff>=0.8,<1",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+markers = [
+  "integration: needs the compose stack (OpenMetadata, PostgreSQL, Prometheus, Grafana) running",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = [".venv", "var"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

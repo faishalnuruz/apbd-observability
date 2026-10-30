@@ -1,0 +1,236 @@
+# Full governance & observability stack:
+#   - OpenMetadata 2.0.7 platform (adapted from the official quickstart compose:
+#     https://github.com/open-metadata/OpenMetadata/blob/2.0.7-release/docker/docker-compose-quickstart)
+#   - A seeded PostgreSQL data plane (raw -> staging -> marts) with deliberate defects
+#   - Prometheus + Grafana (quality score / freshness / audit dashboards)
+#
+# Port map (kept disjoint from the other portfolio stacks):
+#   3308  OpenMetadata metadata MySQL      5433  data-plane PostgreSQL
+#   8585  OpenMetadata API/UI              8586  OpenMetadata admin/health
+#   8081  OpenMetadata Airflow (ingestion) 9200  Elasticsearch
+#   9090  Prometheus                       3301  Grafana
+
+services:
+  om-mysql:
+    container_name: obs-om-mysql
+    image: docker.getcollate.io/openmetadata/db:2.0.7
+    command: "--sort_buffer_size=10M"
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - "3308:3306"
+    volumes:
+      - om-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: mysql --user=root --password=$$MYSQL_ROOT_PASSWORD --silent --execute "use openmetadata_db"
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  om-elasticsearch:
+    container_name: obs-om-elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.0
+    environment:
+      - discovery.type=single-node
+      # 512m (not the quickstart's 1g) to fit the whole stack in a 8 GB VM
+      # alongside the other portfolio projects.
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - om-es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: "curl -s http://localhost:9200/_cluster/health?pretty | grep status | grep -qE 'green|yellow' || exit 1"
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  # One-shot Flyway migration, must complete before the server starts.
+  om-migrate:
+    container_name: obs-om-migrate
+    image: docker.getcollate.io/openmetadata/server:2.0.7
+    command: "./bootstrap/openmetadata-ops.sh migrate"
+    restart: "no"
+    environment:
+      OPENMETADATA_CLUSTER_NAME: openmetadata
+      LOG_LEVEL: INFO
+      DB_DRIVER_CLASS: com.mysql.cj.jdbc.Driver
+      DB_SCHEME: mysql
+      DB_PARAMS: allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      DB_USER: openmetadata_user
+      DB_USER_PASSWORD: openmetadata_password
+      DB_HOST: om-mysql
+      DB_PORT: 3306
+      OM_DATABASE: openmetadata_db
+      ELASTICSEARCH_HOST: om-elasticsearch
+      ELASTICSEARCH_PORT: 9200
+      ELASTICSEARCH_SCHEME: http
+      SEARCH_TYPE: elasticsearch
+      ELASTICSEARCH_INDEX_MAPPING_LANG: EN
+      OPENMETADATA_HEAP_OPTS: -Xmx1G -Xms1G
+    depends_on:
+      om-elasticsearch:
+        condition: service_healthy
+      om-mysql:
+        condition: service_healthy
+
+  om-server:
+    container_name: obs-om-server
+    image: docker.getcollate.io/openmetadata/server:2.0.7
+    restart: always
+    depends_on:
+      om-elasticsearch:
+        condition: service_healthy
+      om-mysql:
+        condition: service_healthy
+      om-migrate:
+        condition: service_completed_successfully
+    environment:
+      OPENMETADATA_CLUSTER_NAME: openmetadata
+      SERVER_PORT: 8585
+      SERVER_ADMIN_PORT: 8586
+      LOG_LEVEL: INFO
+      # Auth: the quickstart defaults (basic auth, admin/admin) — local only.
+      AUTHORIZER_CLASS_NAME: org.openmetadata.service.security.DefaultAuthorizer
+      AUTHORIZER_REQUEST_FILTER: org.openmetadata.service.security.JwtFilter
+      AUTHORIZER_ADMIN_PRINCIPALS: "[admin]"
+      AUTHORIZER_INGESTION_PRINCIPALS: "[ingestion-bot]"
+      AUTHORIZER_PRINCIPAL_DOMAIN: "open-metadata.org"
+      AUTHORIZER_ENFORCE_PRINCIPAL_DOMAIN: "false"
+      AUTHORIZER_ALLOWED_REGISTRATION_DOMAIN: '["all"]'
+      AUTHENTICATION_PROVIDER: basic
+      AUTHENTICATION_PUBLIC_KEYS: "[http://localhost:8585/api/v1/system/config/jwks]"
+      AUTHENTICATION_ENABLE_SELF_SIGNUP: "true"
+      AUTHENTICATION_JWT_PRINCIPAL_CLAIMS: "[email,preferred_username,sub]"
+      RSA_PUBLIC_KEY_FILE_PATH: "./conf/public_key.der"
+      RSA_PRIVATE_KEY_FILE_PATH: "./conf/private_key.der"
+      JWT_ISSUER: open-metadata.org
+      JWT_KEY_ID: Gb389a-9f76-gdjs-a92j-0242bk94356
+      # Metadata store
+      DB_DRIVER_CLASS: com.mysql.cj.jdbc.Driver
+      DB_SCHEME: mysql
+      DB_PARAMS: allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      DB_USER: openmetadata_user
+      DB_USER_PASSWORD: openmetadata_password
+      DB_HOST: om-mysql
+      DB_PORT: 3306
+      OM_DATABASE: openmetadata_db
+      # Search
+      ELASTICSEARCH_HOST: om-elasticsearch
+      ELASTICSEARCH_PORT: 9200
+      ELASTICSEARCH_SCHEME: http
+      SEARCH_TYPE: elasticsearch
+      ELASTICSEARCH_INDEX_MAPPING_LANG: EN
+      # Airflow (ingestion orchestrator)
+      PIPELINE_SERVICE_CLIENT_ENABLED: "true"
+      PIPELINE_SERVICE_CLIENT_CLASS_NAME: org.openmetadata.service.clients.pipeline.airflow.AirflowRESTClient
+      PIPELINE_SERVICE_CLIENT_ENDPOINT: http://om-ingestion:8080
+      PIPELINE_SERVICE_CLIENT_VERIFY_SSL: "no-ssl"
+      AIRFLOW_USERNAME: admin
+      AIRFLOW_PASSWORD: admin
+      AIRFLOW_TIMEOUT: 60
+      FERNET_KEY: jJ/9sz0g0OHxsfxOoSfdFdmk3ysNmPRnH3TUAbz3IHA=
+      SECRET_MANAGER: db
+      SERVER_HOST_API_URL: http://om-server:8585/api
+      # OM exposes its own Prometheus metrics
+      EVENT_MONITOR: prometheus
+      OPENMETADATA_HEAP_OPTS: -Xmx1G -Xms1G
+    ports:
+      - "8585:8585"
+      - "8586:8586"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8586/healthcheck"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+
+  om-ingestion:
+    container_name: obs-om-ingestion
+    image: docker.getcollate.io/openmetadata/ingestion:2.0.7
+    restart: always
+    depends_on:
+      om-elasticsearch:
+        condition: service_started
+      om-mysql:
+        condition: service_healthy
+      om-server:
+        condition: service_started
+    environment:
+      AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session"
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__OPENMETADATA_AIRFLOW_APIS__DAG_GENERATED_CONFIGS: "/opt/airflow/dag_generated_configs"
+      DB_HOST: om-mysql
+      DB_PORT: 3306
+      AIRFLOW_DB: airflow_db
+      DB_SCHEME: mysql+mysqldb
+      DB_USER: airflow_user
+      DB_PASSWORD: airflow_pass
+    entrypoint: /bin/bash
+    command:
+      - "/opt/airflow/ingestion_dependency.sh"
+    ports:
+      - "8081:8080"
+    volumes:
+      - ingestion-volume-dag-airflow:/opt/airflow/dag_generated_configs
+      - ingestion-volume-dags:/opt/airflow/dags
+      - ingestion-volume-tmp:/tmp
+      # Rendered ingestion configs (written by `python -m apbd_obs catalog sync`)
+      - ./config/om:/config
+
+  # ---------------------- P3 data plane ----------------------
+  postgres:
+    container_name: obs-postgres
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: bpkd
+      POSTGRES_PASSWORD: bpkd-2026
+      POSTGRES_DB: bpkd
+    ports:
+      - "5433:5432"
+    volumes:
+      - obs-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bpkd -d bpkd"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  prometheus:
+    container_name: obs-prometheus
+    image: prom/prometheus:v2.53.0
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - obs-prom-data:/prometheus
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    container_name: obs-grafana
+    image: grafana/grafana:11.1.0
+    restart: always
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: obs-2026
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "3301:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - obs-grafana-data:/var/lib/grafana
+
+volumes:
+  om-mysql-data:
+  om-es-data:
+  ingestion-volume-dag-airflow:
+  ingestion-volume-dags:
+  ingestion-volume-tmp:
+  obs-pg-data:
+  obs-prom-data:
+  obs-grafana-data:

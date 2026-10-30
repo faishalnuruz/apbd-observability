@@ -1,0 +1,77 @@
+# The data contract: what "good" means for the APBD warehouse, expressed as
+# executable checks (the PRD's quality-gates example, made runnable).
+#
+# Every check runs against PostgreSQL and earns credit toward a 0-100 score:
+#   PASS = 1.0 x weight,  WARN = warn_credit x weight,  FAIL = 0.
+#
+# Freshness thresholds follow the PRD: warn at 2h, error at 4h.
+version: 1
+
+contract:
+  warn_credit: 0.5      # a WARN check earns half credit
+  error_level: 60       # a table scoring below this raises a Slack ERROR alert
+  warn_level: 85        # ... below this raises a WARNING alert
+
+tables:
+  - name: raw.transaksi
+    description: Transaksi BKU harian dari feeder SIMDA (sumber sistem asli).
+    owner: bidang_data
+    checks:
+      - { type: not_null, column: kode_skpd, weight: 3 }
+      - { type: unique, column: id_bku, weight: 3 }
+      - { type: row_count, min: 9000, max: 11000, weight: 2 }
+      - { type: freshness, column: loaded_at, warn_hours: 2, error_hours: 4, weight: 2 }
+
+  - name: staging.stg_transaksi
+    description: Transaksi tervalidasi setelah drop baris rusak (layer staging).
+    owner: bidang_data
+    checks:
+      - { type: not_null, column: kode_skpd, weight: 2 }
+      - { type: unique, column: id_bku, weight: 2 }
+      - { type: freshness, column: loaded_at, warn_hours: 2, error_hours: 4, weight: 3 }
+      - { type: row_count, min: 9000, max: 11000, weight: 3 }
+
+  - name: marts.transaksi_bku
+    description: Detail transaksi siap-query untuk gateway RBAC (auditor & bidang).
+    owner: bidang_perencanaan
+    checks:
+      - { type: not_null, column: kode_skpd, weight: 2 }
+      - { type: unique, column: id_bku, weight: 2 }
+      - { type: freshness, column: loaded_at, warn_hours: 2, error_hours: 4, weight: 3 }
+      - { type: row_count, min: 8000, max: 11000, weight: 3 }
+
+  - name: marts.fct_realisasi
+    description: Realisasi vs pagu per SKPD — fact yang dipakai dashboard rekap.
+    owner: bidang_perencanaan
+    checks:
+      # Invariant from the PRD: realisasi must never exceed pagu.
+      - { type: invariant, expression: "realisasi <= pagu", weight: 4 }
+      - { type: freshness, column: updated_at, warn_hours: 2, error_hours: 4, weight: 3 }
+      - { type: row_count, min: 5, max: 5, weight: 3 }
+
+  - name: marts.dim_skpd
+    description: Dimensi SKPD (unit organisasi) — rujukan kode & nama.
+    owner: bidang_perencanaan
+    checks:
+      - { type: unique, column: kode_skpd, weight: 3 }
+      - { type: not_null, column: nama_skpd, weight: 2 }
+      - { type: row_count, min: 5, max: 5, weight: 3 }
+      - { type: freshness, column: updated_at, warn_hours: 2, error_hours: 4, weight: 2 }
+
+# Declared lineage in data-flow direction (from = upstream, to = downstream):
+# raw -> staging -> marts, and dim -> fact. `catalog verify` fails if reality
+# and this declaration ever drift apart (both directions).
+lineage:
+  - { from: raw.transaksi, to: staging.stg_transaksi }
+  - { from: staging.stg_transaksi, to: marts.transaksi_bku }
+  - { from: staging.stg_transaksi, to: marts.fct_realisasi }
+  - { from: marts.dim_skpd, to: marts.fct_realisasi }
+
+# The dashboard at the top of the lineage chain, registered in OpenMetadata
+# as a Metabase-style dashboard entity.
+dashboard:
+  service: metabase_bpkd
+  name: Rekap Realisasi APBD
+  description: Dashboard rekap realisasi per SKPD (titik hilir seluruh lineage).
+  feeds:
+    - marts.fct_realisasi

@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # The governance service (runs on the host via `python -m apbd_obs serve`)
+  - job_name: apbd-observability
+    static_configs:
+      - targets: ["host.docker.internal:8100"]
+        labels:
+          project: apbd-observability
+
+  # Note: OpenMetadata 2.0 exposes its Dropwizard metrics as JSON on the
+  # admin port (8586/metrics), not in Prometheus text format. Bridging that
+  # JSON into Prometheus (dropwizard_exporter or a small converter in the
+  # governance service) is left as designed-only; the quality, freshness,
+  # and audit metrics the PRD asks for are exported by apbd-observability.

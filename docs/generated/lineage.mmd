@@ -1,0 +1,6 @@
+graph LR
+    raw.transaksi --> staging.stg_transaksi
+    staging.stg_transaksi --> marts.transaksi_bku
+    staging.stg_transaksi --> marts.fct_realisasi
+    marts.dim_skpd --> marts.fct_realisasi
+    marts.fct_realisasi --> Rekap_Realisasi_APBD["Rekap Realisasi APBD"]

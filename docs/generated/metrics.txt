@@ -1,0 +1,49 @@
+# HELP apbd_quality_score Table quality score 0-100 (contract checks).
+# TYPE apbd_quality_score gauge
+apbd_quality_score{table="marts.dim_skpd"} 100.0
+apbd_quality_score{table="marts.fct_realisasi"} 45.0
+apbd_quality_score{table="marts.transaksi_bku"} 100.0
+apbd_quality_score{table="raw.transaksi"} 40.0
+apbd_quality_score{table="staging.stg_transaksi"} 40.0
+# HELP apbd_quality_score_portfolio Portfolio-wide quality score 0-100.
+# TYPE apbd_quality_score_portfolio gauge
+apbd_quality_score_portfolio 65.0
+# HELP apbd_quality_level Quality level as a number: 0=ok 1=warn 2=error.
+# TYPE apbd_quality_level gauge
+apbd_quality_level 1
+# HELP apbd_check_status Latest status per contract check (1 pass, 0.5 warn, 0 fail).
+# TYPE apbd_check_status gauge
+apbd_check_status{table="raw.transaksi",check="not_null:kode_skpd",status="FAIL"} 0.0
+apbd_check_status{table="raw.transaksi",check="unique:id_bku",status="FAIL"} 0.0
+apbd_check_status{table="raw.transaksi",check="row_count:rows",status="PASS"} 1.0
+apbd_check_status{table="raw.transaksi",check="freshness:loaded_at",status="PASS"} 1.0
+apbd_check_status{table="staging.stg_transaksi",check="not_null:kode_skpd",status="PASS"} 1.0
+apbd_check_status{table="staging.stg_transaksi",check="unique:id_bku",status="PASS"} 1.0
+apbd_check_status{table="staging.stg_transaksi",check="freshness:loaded_at",status="FAIL"} 0.0
+apbd_check_status{table="staging.stg_transaksi",check="row_count:rows",status="FAIL"} 0.0
+apbd_check_status{table="marts.transaksi_bku",check="not_null:kode_skpd",status="PASS"} 1.0
+apbd_check_status{table="marts.transaksi_bku",check="unique:id_bku",status="PASS"} 1.0
+apbd_check_status{table="marts.transaksi_bku",check="freshness:loaded_at",status="PASS"} 1.0
+apbd_check_status{table="marts.transaksi_bku",check="row_count:rows",status="PASS"} 1.0
+apbd_check_status{table="marts.fct_realisasi",check="invariant:realisasi <= pagu",status="FAIL"} 0.0
+apbd_check_status{table="marts.fct_realisasi",check="freshness:updated_at",status="WARN"} 0.5
+apbd_check_status{table="marts.fct_realisasi",check="row_count:rows",status="PASS"} 1.0
+apbd_check_status{table="marts.dim_skpd",check="unique:kode_skpd",status="PASS"} 1.0
+apbd_check_status{table="marts.dim_skpd",check="not_null:nama_skpd",status="PASS"} 1.0
+apbd_check_status{table="marts.dim_skpd",check="row_count:rows",status="PASS"} 1.0
+apbd_check_status{table="marts.dim_skpd",check="freshness:updated_at",status="PASS"} 1.0
+# HELP apbd_freshness_hours Hours since newest row per table.
+# TYPE apbd_freshness_hours gauge
+apbd_freshness_hours{table="marts.dim_skpd"} 0.33
+apbd_freshness_hours{table="marts.fct_realisasi"} 2.6
+apbd_freshness_hours{table="marts.transaksi_bku"} 0.58
+apbd_freshness_hours{table="raw.transaksi"} 1.0
+apbd_freshness_hours{table="staging.stg_transaksi"} 4.5
+# HELP apbd_catalog_tables Number of tables registered in OpenMetadata.
+# TYPE apbd_catalog_tables gauge
+apbd_catalog_tables 5
+# HELP apbd_audit_events_total Gateway audit events by decision.
+# TYPE apbd_audit_events_total counter
+# HELP apbd_scrape_timestamp_seconds When this snapshot was rendered.
+# TYPE apbd_scrape_timestamp_seconds gauge
+apbd_scrape_timestamp_seconds 1793325530

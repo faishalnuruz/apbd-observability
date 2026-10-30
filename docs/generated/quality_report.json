@@ -1,0 +1,157 @@
+{
+  "portfolio_score": 65.0,
+  "level": "warn",
+  "tables": {
+    "raw.transaksi": {
+      "score": 40.0,
+      "owner": "bidang_data",
+      "checks": [
+        {
+          "check": "not_null:kode_skpd",
+          "status": "FAIL",
+          "observed": "12 NULL",
+          "message": "kode_skpd wajib terisi"
+        },
+        {
+          "check": "unique:id_bku",
+          "status": "FAIL",
+          "observed": "5 nilai ganda",
+          "message": "id_bku harus unik"
+        },
+        {
+          "check": "row_count:rows",
+          "status": "PASS",
+          "observed": "9417 baris",
+          "message": "rentang 9000-11000"
+        },
+        {
+          "check": "freshness:loaded_at",
+          "status": "PASS",
+          "observed": "1.0 jam sejak update terakhir",
+          "message": "warn 2j / error 4j"
+        }
+      ]
+    },
+    "staging.stg_transaksi": {
+      "score": 40.0,
+      "owner": "bidang_data",
+      "checks": [
+        {
+          "check": "not_null:kode_skpd",
+          "status": "PASS",
+          "observed": "0 NULL",
+          "message": "kode_skpd wajib terisi"
+        },
+        {
+          "check": "unique:id_bku",
+          "status": "PASS",
+          "observed": "0 nilai ganda",
+          "message": "id_bku harus unik"
+        },
+        {
+          "check": "freshness:loaded_at",
+          "status": "FAIL",
+          "observed": "4.5 jam sejak update terakhir",
+          "message": "warn 2j / error 4j"
+        },
+        {
+          "check": "row_count:rows",
+          "status": "FAIL",
+          "observed": "8845 baris",
+          "message": "rentang 9000-11000"
+        }
+      ]
+    },
+    "marts.transaksi_bku": {
+      "score": 100.0,
+      "owner": "bidang_perencanaan",
+      "checks": [
+        {
+          "check": "not_null:kode_skpd",
+          "status": "PASS",
+          "observed": "0 NULL",
+          "message": "kode_skpd wajib terisi"
+        },
+        {
+          "check": "unique:id_bku",
+          "status": "PASS",
+          "observed": "0 nilai ganda",
+          "message": "id_bku harus unik"
+        },
+        {
+          "check": "freshness:loaded_at",
+          "status": "PASS",
+          "observed": "0.6 jam sejak update terakhir",
+          "message": "warn 2j / error 4j"
+        },
+        {
+          "check": "row_count:rows",
+          "status": "PASS",
+          "observed": "8845 baris",
+          "message": "rentang 8000-11000"
+        }
+      ]
+    },
+    "marts.fct_realisasi": {
+      "score": 45.0,
+      "owner": "bidang_perencanaan",
+      "checks": [
+        {
+          "check": "invariant:realisasi <= pagu",
+          "status": "FAIL",
+          "observed": "1 baris melanggar",
+          "message": "realisasi <= pagu"
+        },
+        {
+          "check": "freshness:updated_at",
+          "status": "WARN",
+          "observed": "2.6 jam sejak update terakhir",
+          "message": "warn 2j / error 4j"
+        },
+        {
+          "check": "row_count:rows",
+          "status": "PASS",
+          "observed": "5 baris",
+          "message": "rentang 5-5"
+        }
+      ]
+    },
+    "marts.dim_skpd": {
+      "score": 100.0,
+      "owner": "bidang_perencanaan",
+      "checks": [
+        {
+          "check": "unique:kode_skpd",
+          "status": "PASS",
+          "observed": "0 nilai ganda",
+          "message": "kode_skpd harus unik"
+        },
+        {
+          "check": "not_null:nama_skpd",
+          "status": "PASS",
+          "observed": "0 NULL",
+          "message": "nama_skpd wajib terisi"
+        },
+        {
+          "check": "row_count:rows",
+          "status": "PASS",
+          "observed": "5 baris",
+          "message": "rentang 5-5"
+        },
+        {
+          "check": "freshness:updated_at",
+          "status": "PASS",
+          "observed": "0.3 jam sejak update terakhir",
+          "message": "warn 2j / error 4j"
+        }
+      ]
+    }
+  },
+  "freshness_hours": {
+    "raw.transaksi": 1.0,
+    "staging.stg_transaksi": 4.5,
+    "marts.transaksi_bku": 0.58,
+    "marts.fct_realisasi": 2.6,
+    "marts.dim_skpd": 0.33
+  }
+}

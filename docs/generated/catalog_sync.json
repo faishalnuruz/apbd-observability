@@ -1,0 +1,13 @@
+{
+  "service": "bpkd_postgres",
+  "tables": [
+    "marts.dim_skpd",
+    "marts.fct_realisasi",
+    "marts.transaksi_bku",
+    "raw.transaksi",
+    "staging.stg_transaksi"
+  ],
+  "dashboard": "Rekap Realisasi APBD",
+  "lineage_edges": 5,
+  "created": []
+}

@@ -1,0 +1,7 @@
+{"ts": 1793325530.3577542, "role": "kepala_bpkd", "table": "marts.fct_realisasi", "decision": "allowed", "reason": "sesuai kebijakan", "masked_columns": [], "rows_returned": 5, "duration_ms": 1.6}
+{"ts": 1793325530.358777, "role": "bidang_kesehatan", "table": "marts.fct_realisasi", "decision": "allowed", "reason": "sesuai kebijakan", "masked_columns": [], "rows_returned": 1, "duration_ms": 0.6}
+{"ts": 1793325530.359447, "role": "bidang_kesehatan", "table": "marts.transaksi_bku", "decision": "allowed", "reason": "sesuai kebijakan", "masked_columns": ["nik_pelapor"], "rows_returned": 5, "duration_ms": 0.6}
+{"ts": 1793325530.359791, "role": "auditor", "table": "marts.transaksi_bku", "decision": "allowed", "reason": "sesuai kebijakan", "masked_columns": ["nik_pelapor"], "rows_returned": 5, "duration_ms": 0.3}
+{"ts": 1793325530.360227, "role": "it_admin", "table": "raw.transaksi", "decision": "allowed", "reason": "sesuai kebijakan", "masked_columns": [], "rows_returned": 5, "duration_ms": 0.4}
+{"ts": 1793325530.360306, "role": "bidang_kesehatan", "table": "raw.transaksi", "decision": "denied", "reason": "role 'bidang_kesehatan' tidak punya akses ke 'raw.transaksi'", "masked_columns": [], "rows_returned": null, "duration_ms": null}
+{"ts": 1793325530.3603609, "role": "hacker", "table": "marts.transaksi_bku", "decision": "denied", "reason": "role tidak dikenal", "masked_columns": [], "rows_returned": null, "duration_ms": null}
